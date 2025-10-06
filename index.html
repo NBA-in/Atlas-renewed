@@ -16,7 +16,7 @@
             --red-color: #f04747;
             --green-color: #43b581;
             --gold-color: #ffd700;
-            --orange-color: #f9a825; /* For delete button */
+            --orange-color: #f9a825;
         }
 
         * {
@@ -31,6 +31,7 @@
             color: var(--text-main);
             display: flex;
             height: 100vh;
+            overflow: hidden;
         }
 
         .main-content {
@@ -63,45 +64,284 @@
             padding: 15px;
             margin-bottom: 20px;
             display: flex;
-            flex-direction: column-reverse; 
+            flex-direction: column-reverse;
         }
 
-        .history-item { padding: 8px 12px; border-radius: 5px; margin-top: 8px; font-size: 1.1rem; max-width: 80%; }
-        .user-word { background-color: var(--brand-color); color: white; align-self: flex-end; margin-left: auto; }
-        .computer-word { background-color: #40444b; align-self: flex-start; }
-        .used-word { background-color: var(--red-color); text-decoration: line-through; opacity: 0.7; }
+        .history-item {
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-size: 1.1rem;
+            max-width: 80%;
+        }
 
-        #game-form { display: flex; }
-        #nation-input { flex-grow: 1; padding: 12px; font-size: 1rem; border: 2px solid #40444b; background-color: var(--background-main); color: var(--text-main); border-radius: 5px 0 0 5px; outline: none; transition: border-color 0.2s; }
-        #nation-input:focus { border-color: var(--brand-color); }
-        #nation-input:disabled { background-color: #292b2f; cursor: not-allowed; }
-        #submit-button { padding: 12px 20px; font-size: 1rem; border: none; background-color: var(--brand-color); color: white; cursor: pointer; border-radius: 0 5px 5px 0; transition: background-color 0.2s; }
-        #submit-button:hover { background-color: #4752c4; }
-        #message-area { margin-top: 15px; text-align: center; font-weight: 500; min-height: 24px; }
-        
-        .sidebar { width: 280px; background-color: var(--background-dark); padding: 20px; display: flex; flex-direction: column; border-left: 1px solid #40444b; }
-        .user-profile { text-align: center; margin-bottom: 20px; }
-        .profile-avatar { width: 64px; height: 64px; background-color: var(--brand-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 600; color: #ffffff; margin: 0 auto 12px; }
-        #username-display { font-size: 1.1rem; font-weight: bold; }
-        #score-display { font-size: 1rem; color: var(--text-muted); }
-        
-        .scoreboard { flex-grow: 1; overflow-y: auto; }
-        .scoreboard h3 { text-align: center; margin-bottom: 15px; color: #fff; border-bottom: 1px solid #40444b; padding-bottom: 10px; }
-        #scoreboard-list { list-style: none; }
-        #scoreboard-list li { display: flex; justify-content: space-between; padding: 8px 5px; border-radius: 4px; transition: background-color 0.2s; font-size: 0.95rem; }
-        #scoreboard-list li:nth-child(odd) { background-color: #32353b; }
-        .score-name { font-weight: 500; }
-        .score-value { font-weight: bold; color: var(--text-main); }
-        .fas.fa-trophy { margin-right: 10px; color: var(--gold-color); }
-        .clickable-user { cursor: pointer; transition: color 0.2s; }
-        .clickable-user:hover { color: var(--brand-color); }
+        .user-word {
+            background-color: var(--brand-color);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
 
-        .sidebar-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .sidebar-buttons button { width: 100%; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; transition: opacity 0.2s; font-weight: 500; }
-        .sidebar-buttons button:hover { opacity: 0.8; }
-        #reset-button { background-color: var(--red-color); }
-        #add-user-button { background-color: var(--green-color); }
-        #delete-user-button { background-color: var(--orange-color); grid-column: span 2; } /* New button */
+        .computer-word {
+            background-color: #40444b;
+            align-self: flex-start;
+        }
+
+        .used-word {
+            background-color: var(--red-color);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        #game-form {
+            display: flex;
+        }
+
+        #nation-input {
+            flex-grow: 1;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #40444b;
+            background-color: var(--background-main);
+            color: var(--text-main);
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #nation-input:focus {
+            border-color: var(--brand-color);
+        }
+
+        #nation-input:disabled {
+            background-color: #292b2f;
+            cursor: not-allowed;
+        }
+
+        #submit-button {
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            background-color: var(--brand-color);
+            color: white;
+            cursor: pointer;
+            border-radius: 0 5px 5px 0;
+            transition: background-color 0.2s;
+        }
+
+        #submit-button:hover {
+            background-color: #4752c4;
+        }
+
+        #message-area {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            min-height: 24px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--background-dark);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #40444b;
+        }
+
+        .user-profile {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .profile-avatar {
+            width: 64px;
+            height: 64px;
+            background-color: var(--brand-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0 auto 12px;
+        }
+
+        #username-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        #score-display {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .scoreboard {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .scoreboard h3 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #fff;
+            border-bottom: 1px solid #40444b;
+            padding-bottom: 10px;
+        }
+
+        #scoreboard-list {
+            list-style: none;
+        }
+
+        #scoreboard-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        #scoreboard-list li:nth-child(odd) {
+            background-color: #32353b;
+        }
+
+        .score-details {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+        }
+        
+        .score-name {
+            font-weight: 500;
+        }
+
+        .score-value {
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .fas.fa-trophy {
+            margin-right: 10px;
+            color: var(--gold-color);
+        }
+
+        .clickable-user {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .clickable-user:hover {
+            color: var(--brand-color);
+        }
+        
+        .delete-icon {
+            margin-left: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .delete-icon:hover {
+            color: var(--red-color);
+        }
+
+        .sidebar-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .sidebar-buttons button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-weight: 500;
+        }
+
+        .sidebar-buttons button:hover {
+            opacity: 0.8;
+        }
+
+        #reset-button {
+            background-color: var(--red-color);
+        }
+
+        #add-user-button {
+            background-color: var(--green-color);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--background-dark);
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .modal-body p {
+            margin-bottom: 20px;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #40444b;
+            background-color: var(--background-main);
+            color: var(--text-main);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .modal-confirm { background-color: var(--brand-color); }
+        .modal-cancel { background-color: #40444b; }
 
     </style>
 </head>
@@ -134,13 +374,22 @@
         <div class="sidebar-buttons">
             <button id="reset-button">Reset</button>
             <button id="add-user-button">Add User</button>
-            <button id="delete-user-button">Delete User</button> <!-- New button -->
         </div>
     </aside>
+
+    <!-- Modal HTML -->
+    <div id="custom-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modal-title"></h3>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
 
     <script>
         const SERVER_URL = 'http://localhost:3000';
 
+        // UI Elements
         const userLogo = document.getElementById('user-logo');
         const usernameDisplay = document.getElementById('username-display');
         const scoreDisplay = document.getElementById('score-display');
@@ -150,30 +399,72 @@
         const messageArea = document.getElementById('message-area');
         const resetButton = document.getElementById('reset-button');
         const addUserButton = document.getElementById('add-user-button');
-        const deleteUserButton = document.getElementById('delete-user-button'); // New button
         const scoreboardList = document.getElementById('scoreboard-list');
+
+        // Modal Elements
+        const modal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalFooter = document.getElementById('modal-footer');
 
         let username = '';
         let score = 0;
-        let currentUsers = []; // To store the list of users for deletion
 
-        async function promptForUser(isInitialSetup = false, isAddingNew = false) {
-             const promptMessage = isInitialSetup 
-                ? "Welcome! Please enter your username to start:"
-                : "Please enter the new username:";
-            
-            const newUsername = prompt(promptMessage, "Player");
-            
-            if (newUsername && newUsername.trim()) {
-                if(isAddingNew) {
-                    await addUser(newUsername.trim());
+        // --- Modal Functions ---
+        function showModal() { modal.style.display = 'flex'; }
+        function hideModal() { modal.style.display = 'none'; }
+
+        function showPrompt({ title, bodyHTML, confirmText = 'OK', showCancel = true }) {
+            return new Promise(resolve => {
+                modalTitle.textContent = title;
+                modalBody.innerHTML = bodyHTML;
+                modalFooter.innerHTML = '';
+
+                if (showCancel) {
+                    const cancelButton = document.createElement('button');
+                    cancelButton.textContent = 'Cancel';
+                    cancelButton.className = 'modal-button modal-cancel';
+                    cancelButton.onclick = () => {
+                        hideModal();
+                        resolve({ confirmed: false });
+                    };
+                    modalFooter.appendChild(cancelButton);
                 }
-                selectUser(newUsername.trim());
+
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = confirmText;
+                confirmButton.className = 'modal-button modal-confirm';
+                confirmButton.onclick = () => {
+                    const input = modal.querySelector('.modal-input');
+                    hideModal();
+                    resolve({ confirmed: true, value: input ? input.value : true });
+                };
+                modalFooter.appendChild(confirmButton);
+                showModal();
+                
+                const input = modal.querySelector('.modal-input');
+                if (input) input.focus();
+            });
+        }
+
+        async function promptForUser(isInitialSetup = false) {
+            const title = isInitialSetup ? "Welcome to Atlas!" : "Add New User";
+            const bodyHTML = `<p>${isInitialSetup ? 'Please enter a username to begin.' : 'Enter the new username below.'}</p><input type="text" class="modal-input" placeholder="Player" />`;
+            
+            const result = await showPrompt({ title, bodyHTML, confirmText: "Start", showCancel: isInitialSetup });
+
+            if (result.confirmed && result.value && result.value.trim()) {
+                const newUsername = result.value.trim();
+                if (!isInitialSetup) {
+                    await addUser(newUsername);
+                }
+                selectUser(newUsername);
             } else if (isInitialSetup) {
                 selectUser("Guest");
             }
         }
-
+        
+        // --- Core Logic ---
         async function addUser(newUsername) {
             try {
                 await fetch(`${SERVER_URL}/adduser`, {
@@ -181,7 +472,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: newUsername }),
                 });
-                await fetchScores(); // Refresh scoreboard after adding
+                await fetchScores();
             } catch (error) {
                 console.error("Failed to add user:", error);
                 messageArea.textContent = "Error: Could not add new user.";
@@ -202,19 +493,25 @@
             nationInput.disabled = false;
             
             try {
-                const response = await fetch(`${SERVER_URL}/reset`, { method: 'POST' });
+                const response = await fetch(`${SERVER_URL}/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username })
+                });
                 const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Failed to reset game');
                 messageArea.textContent = data.message;
                 nationInput.placeholder = `Nation starting with '${data.lastLetter}'...`;
                 nationInput.focus();
+                await fetchScores();
             } catch (error) {
-                messageArea.textContent = "Error: Could not connect to the server.";
+                console.error("Failed to fetch:", error);
+                messageArea.textContent = "Error: Could not connect to server. Is it running?";
             }
         }
 
         function updateScore(points) {
-            if(points === 0) score = 0;
-            else score += points;
+            score = (points === 0) ? 0 : score + points;
             scoreDisplay.textContent = `Score: ${score}`;
         }
 
@@ -229,15 +526,14 @@
         async function handleGameOver() {
             nationInput.disabled = true;
             await saveScore();
-            await fetchScores(); 
+            await fetchScores();
         }
 
         gameForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nation = nationInput.value;
             if (!nation) return;
-            const previousWords = gameHistory.querySelectorAll('.history-item:not(.used-word)');
-            previousWords.forEach(wordEl => wordEl.classList.add('used-word'));
+            gameHistory.querySelectorAll('.history-item:not(.used-word)').forEach(el => el.classList.add('used-word'));
             nationInput.value = '';
             addWordToHistory(nation, 'user');
             messageArea.textContent = 'Thinking...';
@@ -250,7 +546,7 @@
                 const data = await response.json();
                 if (!response.ok) {
                     messageArea.textContent = data.error;
-                    if(data.gameOver) await handleGameOver();
+                    if (data.gameOver) await handleGameOver();
                     return;
                 }
                 updateScore(10);
@@ -268,8 +564,8 @@
         });
 
         async function saveScore() {
-            if(username === 'Guest' || !username) return;
-             try {
+            if (username === 'Guest' || !username) return;
+            try {
                 await fetch(`${SERVER_URL}/score`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -283,84 +579,102 @@
         async function fetchScores() {
             try {
                 const response = await fetch(`${SERVER_URL}/scores`);
+                if(!response.ok) throw new Error(`Server responded with ${response.status}`);
                 const scores = await response.json();
-                currentUsers = scores.map(s => s.username); // Store usernames
                 displayScores(scores);
             } catch (error) {
                 console.error("Failed to fetch scores:", error);
+                messageArea.textContent = "Error: Could not fetch scores. Is the server running?";
             }
         }
 
         function displayScores(scores) {
             scoreboardList.innerHTML = '';
-            if (scores.length === 0) return;
-            const highestScore = scores[0].score;
+            if (!scores || scores.length === 0) return;
+            const highestScore = scores.length > 0 ? scores[0].score : 0;
             scores.slice(0, 10).forEach((scoreItem) => {
                 const li = document.createElement('li');
                 const isTopScorer = scoreItem.score === highestScore && highestScore > 0;
                 const icon = isTopScorer ? `<i class="fas fa-trophy"></i>` : '';
+                const deleteButtonHTML = scoreItem.username !== 'Guest' 
+                    ? `<i class="fas fa-trash-alt delete-icon" data-username="${scoreItem.username}"></i>` : '';
+
                 li.innerHTML = `
-                    <span class="score-name clickable-user" data-username="${scoreItem.username}">${icon} ${scoreItem.username}</span>
+                    <div class="score-details">
+                        <span class="score-name clickable-user" data-username="${scoreItem.username}">${icon} ${scoreItem.username}</span>
+                    </div>
                     <span class="score-value">${scoreItem.score}</span>
+                    ${deleteButtonHTML}
                 `;
                 scoreboardList.appendChild(li);
             });
-            document.querySelectorAll('.clickable-user').forEach(userEl => {
-                userEl.addEventListener('click', (e) => {
-                    selectUser(e.currentTarget.dataset.username);
+
+            // Add event listeners after creating the elements
+            document.querySelectorAll('.clickable-user').forEach(el => {
+                el.addEventListener('click', (e) => selectUser(e.currentTarget.dataset.username));
+            });
+            document.querySelectorAll('.delete-icon').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent user switching when clicking delete
+                    handleDeleteUser(e.currentTarget.dataset.username);
                 });
             });
         }
         
-        async function deleteUser() {
-            if (currentUsers.length === 0) {
-                alert("No users to delete.");
-                return;
-            }
-            
-            const userList = currentUsers.map((u, i) => `${i + 1}: ${u}`).join('\n');
-            const choice = prompt(`Which user do you want to delete?\n\n${userList}`);
-            
-            if (choice) {
-                const userIndex = parseInt(choice, 10) - 1;
-                if (userIndex >= 0 && userIndex < currentUsers.length) {
-                    const userToDelete = currentUsers[userIndex];
-                    if (confirm(`Are you sure you want to delete '${userToDelete}'? This action cannot be undone.`)) {
-                        try {
-                            const response = await fetch(`${SERVER_URL}/deleteuser`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ username: userToDelete }),
-                            });
-                            const data = await response.json();
-                            if (response.ok) {
-                                alert(data.message);
-                                // If the deleted user was the current user, switch to Guest
-                                if (username === userToDelete) {
-                                    selectUser('Guest');
-                                }
-                                await fetchScores(); // Refresh scoreboard
-                            } else {
-                                alert(`Error: ${data.error}`);
-                            }
-                        } catch (error) {
-                            alert("Failed to communicate with the server to delete user.");
-                        }
+        async function handleDeleteUser(userToDelete) {
+            const result = await showPrompt({
+                title: "Delete User",
+                bodyHTML: `<p>Are you sure you want to delete '<strong>${userToDelete}</strong>'? This action cannot be undone.</p>`,
+                confirmText: "Delete",
+                showCancel: true
+            });
+
+            if (result.confirmed) {
+                try {
+                    const response = await fetch(`${SERVER_URL}/deleteuser`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username: userToDelete }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+
+                    if (username === userToDelete) {
+                        selectUser('Guest');
                     }
-                } else {
-                    alert("Invalid selection.");
+                    await fetchScores();
+                } catch (error) {
+                    await showPrompt({ title: "Error", bodyHTML: `<p>${error.message}</p>`, showCancel: false });
                 }
             }
         }
 
-        resetButton.addEventListener('click', resetGame);
-        addUserButton.addEventListener('click', () => promptForUser(false, true));
-        deleteUserButton.addEventListener('click', deleteUser); // New event listener
+        async function handleResetClick() {
+            if (username === 'Guest') {
+                // For Guest user, just reset the game locally without confirmation
+                resetGame();
+                return;
+            }
+            const result = await showPrompt({
+                title: "Reset Score",
+                bodyHTML: `<p>Are you sure you want to reset the game and your high score for '<strong>${username}</strong>' to 0?</p>`,
+                confirmText: "Reset",
+                showCancel: true
+            });
+
+            if (result.confirmed) {
+                resetGame();
+            }
+        }
+
+        resetButton.addEventListener('click', handleResetClick);
+        addUserButton.addEventListener('click', () => promptForUser(false));
         
         window.onload = async () => {
             await fetchScores();
-            promptForUser(true, false); // Initial prompt when the game loads
+            await promptForUser(true);
         };
     </script>
 </body>
 </html>
+

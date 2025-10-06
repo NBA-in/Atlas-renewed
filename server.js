@@ -6,10 +6,10 @@ const cors = require('cors');
 // Basic server setup
 const app = express();
 const port = 3000;
-app.use(cors()); // Allow the frontend to communicate with this server
-app.use(express.json()); // Allow server to read JSON from requests
+app.use(cors());
+app.use(express.json());
 
-// --- IMPORTANT: Database Connection Details ---
+// --- Database Connection Details ---
 const dbConfig = {
     user: "NBA_IN",
     password: "nba",
@@ -18,13 +18,12 @@ const dbConfig = {
 
 let connection;
 
-// Global game state (simple in-memory solution for a local game)
+// Global game state
 let usedNations = [];
 let lastLetter = '';
 
 // --- API Endpoints ---
 
-// Endpoint to add a user
 app.post('/adduser', async (req, res) => {
     const { username } = req.body;
     if (!username) {
@@ -52,10 +51,11 @@ app.post('/adduser', async (req, res) => {
     }
 });
 
-// *** NEW ENDPOINT TO DELETE A USER ***
+// NEW ENDPOINT TO DELETE A USER
 app.post('/deleteuser', async (req, res) => {
     const { username } = req.body;
-    if (!username || username === 'Guest') { // Prevent deleting the Guest user
+    // Basic validation
+    if (!username || username === 'Guest') {
         return res.status(400).json({ error: "Invalid username specified or cannot delete Guest." });
     }
 
@@ -63,12 +63,14 @@ app.post('/deleteuser', async (req, res) => {
         const result = await connection.execute(
             `DELETE FROM UserScores WHERE username = :username`,
             [username],
-            { autoCommit: true }
+            { autoCommit: true } // Commit the transaction immediately
         );
-        
+
+        // Check if a row was actually deleted
         if (result.rowsAffected > 0) {
             res.json({ success: true, message: `User '${username}' has been deleted.` });
         } else {
+            // This case handles trying to delete a user that doesn't exist
             res.status(404).json({ error: `User '${username}' not found.` });
         }
     } catch (err) {
@@ -78,21 +80,16 @@ app.post('/deleteuser', async (req, res) => {
 });
 
 
-// Endpoint to handle a player's turn
 app.post('/play', async (req, res) => {
     const { nation } = req.body;
     const userNation = nation.trim();
-
     if (!userNation) {
         return res.status(400).json({ error: "Nation name cannot be empty.", gameOver: true });
     }
-
     try {
-        // --- User's Turn Validation ---
         if (usedNations.map(n => n.toLowerCase()).includes(userNation.toLowerCase())) {
             return res.status(400).json({ error: `"${userNation}" has already been used. You Lost!`, gameOver: true });
         }
-
         const nationCheckResult = await connection.execute(
             `SELECT COUNT(*) AS count FROM Nations WHERE LOWER(name) = :name`,
             [userNation.toLowerCase()]
@@ -100,20 +97,15 @@ app.post('/play', async (req, res) => {
         if (nationCheckResult.rows[0][0] === 0) {
             return res.status(400).json({ error: `"${userNation}" is not a valid nation. You Lost!`, gameOver: true });
         }
-
         if (lastLetter && userNation.toLowerCase().charAt(0) !== lastLetter.toLowerCase()) {
             return res.status(400).json({ error: `Must start with "${lastLetter.toUpperCase()}". You Lost!`, gameOver: true });
         }
-
         usedNations.push(userNation);
         const userLastLetter = userNation.slice(-1);
-
-        // --- Computer's Turn ---
         const computerQueryResult = await connection.execute(
             `SELECT name FROM Nations WHERE LOWER(SUBSTR(name, 1, 1)) = :letter AND ROWNUM = 1 AND LOWER(name) NOT IN ('${usedNations.map(n=>n.toLowerCase()).join("','")}') ORDER BY DBMS_RANDOM.VALUE`,
             { letter: userLastLetter.toLowerCase() }
         );
-
         if (computerQueryResult.rows.length === 0) {
             return res.json({
                 userNation,
@@ -122,11 +114,9 @@ app.post('/play', async (req, res) => {
                 gameOver: true
             });
         }
-
         const computerNation = computerQueryResult.rows[0][0];
         usedNations.push(computerNation);
         lastLetter = computerNation.slice(-1);
-
         res.json({
             userNation,
             computerNation,
@@ -134,14 +124,12 @@ app.post('/play', async (req, res) => {
             message: `Your turn! Name a nation starting with "${lastLetter.toUpperCase()}".`,
             gameOver: false
         });
-
     } catch (err) {
         console.error("Game logic error:", err);
         res.status(500).json({ error: "An error occurred during the game." });
     }
 });
 
-// Endpoint to save a user's score
 app.post('/score', async (req, res) => {
     const { username, score } = req.body;
     if (!username || username === 'Guest' || score === undefined) {
@@ -163,7 +151,6 @@ app.post('/score', async (req, res) => {
     }
 });
 
-// Endpoint to get the scoreboard
 app.get('/scores', async (req, res) => {
     try {
         const result = await connection.execute(
@@ -180,11 +167,30 @@ app.get('/scores', async (req, res) => {
     }
 });
 
-// Endpoint to reset the game
-app.post('/reset', (req, res) => {
+// *** MODIFIED ENDPOINT TO RESET THE GAME AND DATABASE SCORE ***
+app.post('/reset', async (req, res) => {
+    const { username } = req.body; // Get username from the request
+
+    // Reset in-memory game state
     usedNations = [];
     lastLetter = 'S';
-    res.json({ success: true, message: `Game reset. Start with a nation beginning with 'S'.`, lastLetter: 'S' });
+
+    try {
+        // Only update the database if a valid user is provided (not Guest)
+        if (username && username !== 'Guest') {
+            await connection.execute(
+                `UPDATE UserScores SET score = 0 WHERE username = :username`,
+                [username],
+                { autoCommit: true }
+            );
+        }
+        // Always send a success response to the frontend to reset the UI
+        res.json({ success: true, message: `Game reset. Start with a nation beginning with 'S'.`, lastLetter: 'S' });
+    } catch (err) {
+        console.error("Error resetting score in database:", err);
+        // If DB fails, still let the frontend reset, but log the error
+        res.status(500).json({ error: "Game reset, but failed to update score in the database." });
+    }
 });
 
 // --- Start the Server ---
@@ -201,3 +207,5 @@ async function startServer() {
 }
 
 startServer();
+
+
