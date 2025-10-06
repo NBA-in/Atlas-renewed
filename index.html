@@ -16,6 +16,7 @@
             --red-color: #f04747;
             --green-color: #43b581;
             --gold-color: #ffd700;
+            --orange-color: #f9a825; /* For delete button */
         }
 
         * {
@@ -62,34 +63,13 @@
             padding: 15px;
             margin-bottom: 20px;
             display: flex;
-            flex-direction: column-reverse; /* This helps with the visual flow */
+            flex-direction: column-reverse; 
         }
 
-        .history-item {
-            padding: 8px 12px;
-            border-radius: 5px;
-            margin-top: 8px; /* Changed from margin-bottom */
-            font-size: 1.1rem;
-            max-width: 80%;
-        }
-
-        .user-word {
-            background-color: var(--brand-color);
-            color: white;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-
-        .computer-word {
-            background-color: #40444b;
-            align-self: flex-start;
-        }
-
-        .used-word {
-            background-color: var(--red-color);
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
+        .history-item { padding: 8px 12px; border-radius: 5px; margin-top: 8px; font-size: 1.1rem; max-width: 80%; }
+        .user-word { background-color: var(--brand-color); color: white; align-self: flex-end; margin-left: auto; }
+        .computer-word { background-color: #40444b; align-self: flex-start; }
+        .used-word { background-color: var(--red-color); text-decoration: line-through; opacity: 0.7; }
 
         #game-form { display: flex; }
         #nation-input { flex-grow: 1; padding: 12px; font-size: 1rem; border: 2px solid #40444b; background-color: var(--background-main); color: var(--text-main); border-radius: 5px 0 0 5px; outline: none; transition: border-color 0.2s; }
@@ -99,7 +79,7 @@
         #submit-button:hover { background-color: #4752c4; }
         #message-area { margin-top: 15px; text-align: center; font-weight: 500; min-height: 24px; }
         
-        .sidebar { width: 260px; background-color: var(--background-dark); padding: 20px; display: flex; flex-direction: column; border-left: 1px solid #40444b; }
+        .sidebar { width: 280px; background-color: var(--background-dark); padding: 20px; display: flex; flex-direction: column; border-left: 1px solid #40444b; }
         .user-profile { text-align: center; margin-bottom: 20px; }
         .profile-avatar { width: 64px; height: 64px; background-color: var(--brand-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 600; color: #ffffff; margin: 0 auto 12px; }
         #username-display { font-size: 1.1rem; font-weight: bold; }
@@ -116,11 +96,13 @@
         .clickable-user { cursor: pointer; transition: color 0.2s; }
         .clickable-user:hover { color: var(--brand-color); }
 
-        .sidebar-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .sidebar-buttons button { flex-grow: 1; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; transition: opacity 0.2s; font-weight: 500; }
+        .sidebar-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .sidebar-buttons button { width: 100%; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; transition: opacity 0.2s; font-weight: 500; }
         .sidebar-buttons button:hover { opacity: 0.8; }
         #reset-button { background-color: var(--red-color); }
         #add-user-button { background-color: var(--green-color); }
+        #delete-user-button { background-color: var(--orange-color); grid-column: span 2; } /* New button */
+
     </style>
 </head>
 
@@ -152,6 +134,7 @@
         <div class="sidebar-buttons">
             <button id="reset-button">Reset</button>
             <button id="add-user-button">Add User</button>
+            <button id="delete-user-button">Delete User</button> <!-- New button -->
         </div>
     </aside>
 
@@ -167,30 +150,48 @@
         const messageArea = document.getElementById('message-area');
         const resetButton = document.getElementById('reset-button');
         const addUserButton = document.getElementById('add-user-button');
+        const deleteUserButton = document.getElementById('delete-user-button'); // New button
         const scoreboardList = document.getElementById('scoreboard-list');
 
         let username = '';
         let score = 0;
+        let currentUsers = []; // To store the list of users for deletion
 
-        function promptForUser(isInitialSetup = false) {
-            const promptMessage = isInitialSetup 
+        async function promptForUser(isInitialSetup = false, isAddingNew = false) {
+             const promptMessage = isInitialSetup 
                 ? "Welcome! Please enter your username to start:"
                 : "Please enter the new username:";
             
             const newUsername = prompt(promptMessage, "Player");
             
             if (newUsername && newUsername.trim()) {
+                if(isAddingNew) {
+                    await addUser(newUsername.trim());
+                }
                 selectUser(newUsername.trim());
             } else if (isInitialSetup) {
-                // If initial prompt is cancelled, set a default guest user
                 selectUser("Guest");
+            }
+        }
+
+        async function addUser(newUsername) {
+            try {
+                await fetch(`${SERVER_URL}/adduser`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: newUsername }),
+                });
+                await fetchScores(); // Refresh scoreboard after adding
+            } catch (error) {
+                console.error("Failed to add user:", error);
+                messageArea.textContent = "Error: Could not add new user.";
             }
         }
 
         function selectUser(selectedUsername) {
             username = selectedUsername;
             usernameDisplay.textContent = username;
-            userLogo.textContent = username.charAt(0).toUpperCase();
+            userLogo.textContent = username ? username.charAt(0).toUpperCase() : '?';
             resetGame();
         }
         
@@ -235,31 +236,24 @@
             e.preventDefault();
             const nation = nationInput.value;
             if (!nation) return;
-
             const previousWords = gameHistory.querySelectorAll('.history-item:not(.used-word)');
             previousWords.forEach(wordEl => wordEl.classList.add('used-word'));
-
             nationInput.value = '';
             addWordToHistory(nation, 'user');
             messageArea.textContent = 'Thinking...';
-
             try {
                 const response = await fetch(`${SERVER_URL}/play`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nation }),
                 });
-
                 const data = await response.json();
-
                 if (!response.ok) {
                     messageArea.textContent = data.error;
                     if(data.gameOver) await handleGameOver();
                     return;
                 }
-
                 updateScore(10);
-
                 if (data.gameOver) {
                     messageArea.textContent = data.message;
                     await handleGameOver();
@@ -290,6 +284,7 @@
             try {
                 const response = await fetch(`${SERVER_URL}/scores`);
                 const scores = await response.json();
+                currentUsers = scores.map(s => s.username); // Store usernames
                 displayScores(scores);
             } catch (error) {
                 console.error("Failed to fetch scores:", error);
@@ -299,22 +294,17 @@
         function displayScores(scores) {
             scoreboardList.innerHTML = '';
             if (scores.length === 0) return;
-
             const highestScore = scores[0].score;
-
             scores.slice(0, 10).forEach((scoreItem) => {
                 const li = document.createElement('li');
                 const isTopScorer = scoreItem.score === highestScore && highestScore > 0;
                 const icon = isTopScorer ? `<i class="fas fa-trophy"></i>` : '';
-                
                 li.innerHTML = `
                     <span class="score-name clickable-user" data-username="${scoreItem.username}">${icon} ${scoreItem.username}</span>
                     <span class="score-value">${scoreItem.score}</span>
                 `;
                 scoreboardList.appendChild(li);
             });
-            
-            // Add event listeners after creating the elements
             document.querySelectorAll('.clickable-user').forEach(userEl => {
                 userEl.addEventListener('click', (e) => {
                     selectUser(e.currentTarget.dataset.username);
@@ -322,14 +312,55 @@
             });
         }
         
+        async function deleteUser() {
+            if (currentUsers.length === 0) {
+                alert("No users to delete.");
+                return;
+            }
+            
+            const userList = currentUsers.map((u, i) => `${i + 1}: ${u}`).join('\n');
+            const choice = prompt(`Which user do you want to delete?\n\n${userList}`);
+            
+            if (choice) {
+                const userIndex = parseInt(choice, 10) - 1;
+                if (userIndex >= 0 && userIndex < currentUsers.length) {
+                    const userToDelete = currentUsers[userIndex];
+                    if (confirm(`Are you sure you want to delete '${userToDelete}'? This action cannot be undone.`)) {
+                        try {
+                            const response = await fetch(`${SERVER_URL}/deleteuser`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ username: userToDelete }),
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                                alert(data.message);
+                                // If the deleted user was the current user, switch to Guest
+                                if (username === userToDelete) {
+                                    selectUser('Guest');
+                                }
+                                await fetchScores(); // Refresh scoreboard
+                            } else {
+                                alert(`Error: ${data.error}`);
+                            }
+                        } catch (error) {
+                            alert("Failed to communicate with the server to delete user.");
+                        }
+                    }
+                } else {
+                    alert("Invalid selection.");
+                }
+            }
+        }
+
         resetButton.addEventListener('click', resetGame);
-        addUserButton.addEventListener('click', () => promptForUser(false));
+        addUserButton.addEventListener('click', () => promptForUser(false, true));
+        deleteUserButton.addEventListener('click', deleteUser); // New event listener
         
-        window.onload = () => {
-            promptForUser(true); // Initial prompt when the game loads
-            fetchScores();
+        window.onload = async () => {
+            await fetchScores();
+            promptForUser(true, false); // Initial prompt when the game loads
         };
     </script>
 </body>
 </html>
-

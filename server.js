@@ -24,38 +24,56 @@ let lastLetter = '';
 
 // --- API Endpoints ---
 
-// NEW ENDPOINT TO ADD A USER
+// Endpoint to add a user
 app.post('/adduser', async (req, res) => {
     const { username } = req.body;
     if (!username) {
         return res.status(400).json({ error: "Username cannot be empty." });
     }
-
     try {
-        // Check if user already exists
         const userCheck = await connection.execute(
             `SELECT COUNT(*) AS count FROM UserScores WHERE username = :username`,
             [username]
         );
-
         const userExists = userCheck.rows[0][0] > 0;
-
         if (!userExists) {
-            // If user does not exist, insert them with a score of 0
             await connection.execute(
                 `INSERT INTO UserScores (username, score) VALUES (:username, 0)`,
                 [username],
-                { autoCommit: true } // autoCommit simplifies the transaction
+                { autoCommit: true }
             );
             res.status(201).json({ message: `User '${username}' created successfully.` });
         } else {
-            // If user already exists, do nothing
             res.status(200).json({ message: `User '${username}' already exists.` });
         }
-
     } catch (err) {
         console.error("Database error on add user:", err);
         res.status(500).json({ error: "Failed to add user due to a database error." });
+    }
+});
+
+// *** NEW ENDPOINT TO DELETE A USER ***
+app.post('/deleteuser', async (req, res) => {
+    const { username } = req.body;
+    if (!username || username === 'Guest') { // Prevent deleting the Guest user
+        return res.status(400).json({ error: "Invalid username specified or cannot delete Guest." });
+    }
+
+    try {
+        const result = await connection.execute(
+            `DELETE FROM UserScores WHERE username = :username`,
+            [username],
+            { autoCommit: true }
+        );
+        
+        if (result.rowsAffected > 0) {
+            res.json({ success: true, message: `User '${username}' has been deleted.` });
+        } else {
+            res.status(404).json({ error: `User '${username}' not found.` });
+        }
+    } catch (err) {
+        console.error("Database error on delete user:", err);
+        res.status(500).json({ error: "Failed to delete user due to a database error." });
     }
 });
 
@@ -71,12 +89,10 @@ app.post('/play', async (req, res) => {
 
     try {
         // --- User's Turn Validation ---
-        // 1. Check if the nation has already been used
         if (usedNations.map(n => n.toLowerCase()).includes(userNation.toLowerCase())) {
             return res.status(400).json({ error: `"${userNation}" has already been used. You Lost!`, gameOver: true });
         }
 
-        // 2. Check if it's a valid nation
         const nationCheckResult = await connection.execute(
             `SELECT COUNT(*) AS count FROM Nations WHERE LOWER(name) = :name`,
             [userNation.toLowerCase()]
@@ -85,12 +101,10 @@ app.post('/play', async (req, res) => {
             return res.status(400).json({ error: `"${userNation}" is not a valid nation. You Lost!`, gameOver: true });
         }
 
-        // 3. Check if it starts with the correct letter
         if (lastLetter && userNation.toLowerCase().charAt(0) !== lastLetter.toLowerCase()) {
             return res.status(400).json({ error: `Must start with "${lastLetter.toUpperCase()}". You Lost!`, gameOver: true });
         }
 
-        // If all checks pass, the user's move is valid
         usedNations.push(userNation);
         const userLastLetter = userNation.slice(-1);
 
@@ -155,7 +169,6 @@ app.get('/scores', async (req, res) => {
         const result = await connection.execute(
             `SELECT username, score FROM UserScores ORDER BY score DESC`
         );
-        // The driver returns rows as arrays, so we map them to objects
         const scores = result.rows.map(row => ({
             username: row[0],
             score: row[1]
@@ -188,4 +201,3 @@ async function startServer() {
 }
 
 startServer();
-
