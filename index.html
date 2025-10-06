@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas - Nation Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --background-dark: #2f3136;
+            --background-main: #36393f;
+            --text-main: #dcddde;
+            --text-muted: #b9bbbe;
+            --brand-color: #5865F2;
+            --red-color: #f04747;
+            --green-color: #43b581;
+            --gold-color: #ffd700;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .game-area {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--background-dark);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #game-history {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #40444b;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column-reverse; /* This helps with the visual flow */
+        }
+
+        .history-item {
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 8px; /* Changed from margin-bottom */
+            font-size: 1.1rem;
+            max-width: 80%;
+        }
+
+        .user-word {
+            background-color: var(--brand-color);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .computer-word {
+            background-color: #40444b;
+            align-self: flex-start;
+        }
+
+        .used-word {
+            background-color: var(--red-color);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        #game-form { display: flex; }
+        #nation-input { flex-grow: 1; padding: 12px; font-size: 1rem; border: 2px solid #40444b; background-color: var(--background-main); color: var(--text-main); border-radius: 5px 0 0 5px; outline: none; transition: border-color 0.2s; }
+        #nation-input:focus { border-color: var(--brand-color); }
+        #nation-input:disabled { background-color: #292b2f; cursor: not-allowed; }
+        #submit-button { padding: 12px 20px; font-size: 1rem; border: none; background-color: var(--brand-color); color: white; cursor: pointer; border-radius: 0 5px 5px 0; transition: background-color 0.2s; }
+        #submit-button:hover { background-color: #4752c4; }
+        #message-area { margin-top: 15px; text-align: center; font-weight: 500; min-height: 24px; }
+        
+        .sidebar { width: 260px; background-color: var(--background-dark); padding: 20px; display: flex; flex-direction: column; border-left: 1px solid #40444b; }
+        .user-profile { text-align: center; margin-bottom: 20px; }
+        .profile-avatar { width: 64px; height: 64px; background-color: var(--brand-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; font-weight: 600; color: #ffffff; margin: 0 auto 12px; }
+        #username-display { font-size: 1.1rem; font-weight: bold; }
+        #score-display { font-size: 1rem; color: var(--text-muted); }
+        
+        .scoreboard { flex-grow: 1; overflow-y: auto; }
+        .scoreboard h3 { text-align: center; margin-bottom: 15px; color: #fff; border-bottom: 1px solid #40444b; padding-bottom: 10px; }
+        #scoreboard-list { list-style: none; }
+        #scoreboard-list li { display: flex; justify-content: space-between; padding: 8px 5px; border-radius: 4px; transition: background-color 0.2s; font-size: 0.95rem; }
+        #scoreboard-list li:nth-child(odd) { background-color: #32353b; }
+        .score-name { font-weight: 500; }
+        .score-value { font-weight: bold; color: var(--text-main); }
+        .fas.fa-trophy { margin-right: 10px; color: var(--gold-color); }
+        .clickable-user { cursor: pointer; transition: color 0.2s; }
+        .clickable-user:hover { color: var(--brand-color); }
+
+        .sidebar-buttons { display: flex; gap: 10px; margin-top: 20px; }
+        .sidebar-buttons button { flex-grow: 1; padding: 10px; border: none; border-radius: 5px; color: white; cursor: pointer; transition: opacity 0.2s; font-weight: 500; }
+        .sidebar-buttons button:hover { opacity: 0.8; }
+        #reset-button { background-color: var(--red-color); }
+        #add-user-button { background-color: var(--green-color); }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <h1>Atlas - The Nation Game</h1>
+        <div class="game-area">
+            <div id="game-history"></div>
+            <form id="game-form">
+                <input type="text" id="nation-input" placeholder="Enter a nation name..." autocomplete="off" required>
+                <button type="submit" id="submit-button">Send</button>
+            </form>
+            <p id="message-area">Enter a username to begin!</p>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="user-profile">
+            <div class="profile-avatar" id="user-logo">?</div>
+            <p id="username-display">Guest</p>
+            <p id="score-display">Score: 0</p>
+        </div>
+        
+        <div class="scoreboard">
+            <h3><i class="fas fa-trophy"></i> Scoreboard</h3>
+            <ul id="scoreboard-list"></ul>
+        </div>
+        
+        <div class="sidebar-buttons">
+            <button id="reset-button">Reset</button>
+            <button id="add-user-button">Add User</button>
+        </div>
+    </aside>
+
+    <script>
+        const SERVER_URL = 'http://localhost:3000';
+
+        const userLogo = document.getElementById('user-logo');
+        const usernameDisplay = document.getElementById('username-display');
+        const scoreDisplay = document.getElementById('score-display');
+        const gameHistory = document.getElementById('game-history');
+        const gameForm = document.getElementById('game-form');
+        const nationInput = document.getElementById('nation-input');
+        const messageArea = document.getElementById('message-area');
+        const resetButton = document.getElementById('reset-button');
+        const addUserButton = document.getElementById('add-user-button');
+        const scoreboardList = document.getElementById('scoreboard-list');
+
+        let username = '';
+        let score = 0;
+
+        function promptForUser(isInitialSetup = false) {
+            const promptMessage = isInitialSetup 
+                ? "Welcome! Please enter your username to start:"
+                : "Please enter the new username:";
+            
+            const newUsername = prompt(promptMessage, "Player");
+            
+            if (newUsername && newUsername.trim()) {
+                selectUser(newUsername.trim());
+            } else if (isInitialSetup) {
+                // If initial prompt is cancelled, set a default guest user
+                selectUser("Guest");
+            }
+        }
+
+        function selectUser(selectedUsername) {
+            username = selectedUsername;
+            usernameDisplay.textContent = username;
+            userLogo.textContent = username.charAt(0).toUpperCase();
+            resetGame();
+        }
+        
+        async function resetGame() {
+            score = 0;
+            updateScore(0);
+            gameHistory.innerHTML = '';
+            nationInput.disabled = false;
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/reset`, { method: 'POST' });
+                const data = await response.json();
+                messageArea.textContent = data.message;
+                nationInput.placeholder = `Nation starting with '${data.lastLetter}'...`;
+                nationInput.focus();
+            } catch (error) {
+                messageArea.textContent = "Error: Could not connect to the server.";
+            }
+        }
+
+        function updateScore(points) {
+            if(points === 0) score = 0;
+            else score += points;
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
+
+        function addWordToHistory(word, type) {
+            const div = document.createElement('div');
+            div.textContent = word;
+            div.className = `history-item ${type}-word`;
+            gameHistory.prepend(div);
+            gameHistory.scrollTop = 0;
+        }
+
+        async function handleGameOver() {
+            nationInput.disabled = true;
+            await saveScore();
+            await fetchScores(); 
+        }
+
+        gameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nation = nationInput.value;
+            if (!nation) return;
+
+            const previousWords = gameHistory.querySelectorAll('.history-item:not(.used-word)');
+            previousWords.forEach(wordEl => wordEl.classList.add('used-word'));
+
+            nationInput.value = '';
+            addWordToHistory(nation, 'user');
+            messageArea.textContent = 'Thinking...';
+
+            try {
+                const response = await fetch(`${SERVER_URL}/play`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nation }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    messageArea.textContent = data.error;
+                    if(data.gameOver) await handleGameOver();
+                    return;
+                }
+
+                updateScore(10);
+
+                if (data.gameOver) {
+                    messageArea.textContent = data.message;
+                    await handleGameOver();
+                } else {
+                    addWordToHistory(data.computerNation, 'computer');
+                    messageArea.textContent = data.message;
+                    nationInput.placeholder = `Nation starting with '${data.lastLetter}'...`;
+                }
+            } catch (error) {
+                messageArea.textContent = "Error communicating with server.";
+            }
+        });
+
+        async function saveScore() {
+            if(username === 'Guest' || !username) return;
+             try {
+                await fetch(`${SERVER_URL}/score`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, score }),
+                });
+            } catch (error) {
+                console.error("Failed to save score:", error);
+            }
+        }
+
+        async function fetchScores() {
+            try {
+                const response = await fetch(`${SERVER_URL}/scores`);
+                const scores = await response.json();
+                displayScores(scores);
+            } catch (error) {
+                console.error("Failed to fetch scores:", error);
+            }
+        }
+
+        function displayScores(scores) {
+            scoreboardList.innerHTML = '';
+            if (scores.length === 0) return;
+
+            const highestScore = scores[0].score;
+
+            scores.slice(0, 10).forEach((scoreItem) => {
+                const li = document.createElement('li');
+                const isTopScorer = scoreItem.score === highestScore && highestScore > 0;
+                const icon = isTopScorer ? `<i class="fas fa-trophy"></i>` : '';
+                
+                li.innerHTML = `
+                    <span class="score-name clickable-user" data-username="${scoreItem.username}">${icon} ${scoreItem.username}</span>
+                    <span class="score-value">${scoreItem.score}</span>
+                `;
+                scoreboardList.appendChild(li);
+            });
+            
+            // Add event listeners after creating the elements
+            document.querySelectorAll('.clickable-user').forEach(userEl => {
+                userEl.addEventListener('click', (e) => {
+                    selectUser(e.currentTarget.dataset.username);
+                });
+            });
+        }
+        
+        resetButton.addEventListener('click', resetGame);
+        addUserButton.addEventListener('click', () => promptForUser(false));
+        
+        window.onload = () => {
+            promptForUser(true); // Initial prompt when the game loads
+            fetchScores();
+        };
+    </script>
+</body>
+</html>
+
